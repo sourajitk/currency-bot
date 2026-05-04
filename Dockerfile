@@ -20,7 +20,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
-COPY src ./src
+COPY src/currency_bot ./currency_bot
 
 ENV PATH="/app/.venv/bin:$PATH"
 
