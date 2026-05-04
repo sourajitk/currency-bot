@@ -1,6 +1,9 @@
 import re
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TARGETS = ["USD", "AED", "EUR"]
 FALLBACK_TARGET = None
@@ -21,7 +24,6 @@ PATTERN = re.compile(
     r"(?i)(?:(\d+(?:\.\d+)?)\s*([A-Za-z]{3}|[\$€£₹¥₽₩₪]))|(?:([A-Za-z]{3}|[\$€£₹¥₽₩₪])\s*(\d+(?:\.\d+)?))"
 )
 
-
 def load_preferences():
     if os.path.exists(PREFS_FILE):
         try:
@@ -35,17 +37,15 @@ def load_preferences():
                         prefs[int(k)] = v
                 return prefs
         except Exception as e:
-            print(f"Error loading preferences: {e}")
+            logger.error(f"Error loading preferences: {e}")
     return {}
-
 
 def save_preferences(prefs):
     try:
         with open(PREFS_FILE, "w") as f:
             json.dump(prefs, f)
     except Exception as e:
-        print(f"Error saving preferences: {e}")
-
+        logger.error(f"Error saving preferences: {e}")
 
 USER_PREFERENCES = load_preferences()
 SUPPORTED_CURRENCIES = set()

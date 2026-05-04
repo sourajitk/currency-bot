@@ -1,6 +1,8 @@
+import logging
 import requests
-from config import SUPPORTED_CURRENCIES
+from .config import SUPPORTED_CURRENCIES
 
+logger = logging.getLogger(__name__)
 
 def init_supported_currencies():
     try:
@@ -10,9 +12,8 @@ def init_supported_currencies():
             SUPPORTED_CURRENCIES.update(data.get("rates", {}).keys())
             return True
     except Exception as e:
-        print(f"Error fetching currencies: {e}")
+        logger.error(f"Error fetching currencies: {e}")
     return False
-
 
 def get_exchange_rates(base_currency):
     try:
@@ -20,5 +21,5 @@ def get_exchange_rates(base_currency):
         if response.status_code == 200:
             return response.json().get("rates", {})
     except Exception as e:
-        print(f"Error fetching rates for {base_currency}: {e}")
+        logger.error(f"Error fetching rates for {base_currency}: {e}")
     return None

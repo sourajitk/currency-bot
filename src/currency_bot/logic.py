@@ -1,4 +1,4 @@
-from config import (
+from .config import (
     PATTERN,
     SYMBOL_MAP,
     SUPPORTED_CURRENCIES,
@@ -6,7 +6,6 @@ from config import (
     DEFAULT_TARGETS,
     FALLBACK_TARGET,
 )
-
 
 def extract_currency_matches(text):
     matches = PATTERN.finditer(text)
@@ -27,7 +26,6 @@ def extract_currency_matches(text):
 
         results.append((amount, currency))
     return results
-
 
 def format_number(num, format_pref):
     if num >= 10:
@@ -54,7 +52,6 @@ def format_number(num, format_pref):
             integer_part = f"{int(parts[0]):,}"
 
     return f"{integer_part}{decimal_part}"
-
 
 def calculate_conversions(amount, currency, rates, chat_id):
     prefs = USER_PREFERENCES.get(chat_id, {})

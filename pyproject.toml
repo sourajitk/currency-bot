@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "currency-bot"
+version = "0.1.0"
+description = "A Telegram bot that detects currencies and converts them in real-time."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "currency_bot", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyTelegramBotAPI = "^4.15.4"
+requests = "^2.31.0"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

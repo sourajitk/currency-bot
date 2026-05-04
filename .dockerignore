@@ -1,4 +1,6 @@
-myenv
-__pycache__
-preferences.json
 .env
+.venv
+__pycache__
+*.pyc
+.git
+preferences.json
