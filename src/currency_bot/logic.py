@@ -11,14 +11,26 @@ def extract_currency_matches(text):
     matches = PATTERN.finditer(text)
     results = []
     for match in matches:
-        if match.group(1) and match.group(2):
+        if match.group(1) and match.group(3):
             amount = float(match.group(1))
-            currency_str = match.group(2).upper()
-        elif match.group(3) and match.group(4):
+            suffix = match.group(2).lower() if match.group(2) else ""
             currency_str = match.group(3).upper()
-            amount = float(match.group(4))
+        elif match.group(4) and match.group(5):
+            currency_str = match.group(4).upper()
+            amount = float(match.group(5))
+            suffix = match.group(6).lower() if match.group(6) else ""
         else:
             continue
+
+        multiplier = 1
+        if suffix == 'k': multiplier = 1_000
+        elif suffix == 'l': multiplier = 100_000
+        elif suffix == 'm': multiplier = 1_000_000
+        elif suffix == 'cr': multiplier = 10_000_000
+        elif suffix == 'b': multiplier = 1_000_000_000
+        elif suffix == 't': multiplier = 1_000_000_000_000
+        
+        amount *= multiplier
 
         currency = SYMBOL_MAP.get(currency_str, currency_str)
         if SUPPORTED_CURRENCIES and currency not in SUPPORTED_CURRENCIES:
