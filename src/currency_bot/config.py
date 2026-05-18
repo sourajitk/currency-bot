@@ -21,7 +21,7 @@ SYMBOL_MAP = {
 }
 
 PATTERN = re.compile(
-    r"(?i)(?:(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?\s*([A-Za-z]{3}|[\$€£₹¥₽₩₪]))|(?:([A-Za-z]{3}|[\$€£₹¥₽₩₪])\s*(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?)"
+    r"(?i)(?:(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?\s*(\b[A-Za-z]{3}\b|[\$€£₹¥₽₩₪]))|(?:(\b[A-Za-z]{3}\b|[\$€£₹¥₽₩₪])\s*(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?)"
 )
 
 def load_preferences():

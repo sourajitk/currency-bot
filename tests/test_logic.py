@@ -34,5 +34,14 @@ class TestCurrencyLogic(unittest.TestCase):
         self.assertEqual(extract_currency_matches("₹2.5L"), [(250000.0, "INR")])
         self.assertEqual(extract_currency_matches("₹1.5cr"), [(15000000.0, "INR")])
 
+    def test_whole_word_matching(self):
+        self.assertEqual(extract_currency_matches("Call190Now"), [])
+        self.assertEqual(extract_currency_matches("Actually 190"), [])
+        self.assertEqual(extract_currency_matches("All190"), [])
+        self.assertEqual(extract_currency_matches("190 EUR"), [(190.0, "EUR")])
+        self.assertEqual(extract_currency_matches("EUR 190"), [(190.0, "EUR")])
+        self.assertEqual(extract_currency_matches("190EUR"), [])
+        self.assertEqual(extract_currency_matches("EUR190"), [])
+
 if __name__ == '__main__':
     unittest.main()
