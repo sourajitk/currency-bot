@@ -4,6 +4,7 @@ from .config import SUPPORTED_CURRENCIES
 
 logger = logging.getLogger(__name__)
 
+
 def init_supported_currencies():
     try:
         response = requests.get("https://open.er-api.com/v6/latest/USD")
@@ -14,6 +15,7 @@ def init_supported_currencies():
     except Exception as e:
         logger.error(f"Error fetching currencies: {e}")
     return False
+
 
 def get_exchange_rates(base_currency):
     try:

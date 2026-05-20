@@ -21,8 +21,10 @@ SYMBOL_MAP = {
 }
 
 PATTERN = re.compile(
-    r"(?i)(?:(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?\s*(\b[A-Za-z]{3}\b|[\$€£₹¥₽₩₪]))|(?:(\b[A-Za-z]{3}\b|[\$€£₹¥₽₩₪])\s*(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?)"
+    r"(?i)(?:(?<!\w)(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?\s*([A-Za-z]{3}|[\$€£₹¥₽₩₪])(?!\w))|"
+    r"(?:(?<!\w)([A-Za-z]{3}|[\$€£₹¥₽₩₪])\s*(\d+(?:\.\d+)?)\s*(k|m|b|t|l|cr)?(?!\w))"
 )
+
 
 def load_preferences():
     if os.path.exists(PREFS_FILE):
@@ -40,12 +42,14 @@ def load_preferences():
             logger.error(f"Error loading preferences: {e}")
     return {}
 
+
 def save_preferences(prefs):
     try:
         with open(PREFS_FILE, "w") as f:
             json.dump(prefs, f)
     except Exception as e:
         logger.error(f"Error saving preferences: {e}")
+
 
 USER_PREFERENCES = load_preferences()
 SUPPORTED_CURRENCIES = set()

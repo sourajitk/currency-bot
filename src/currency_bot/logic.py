@@ -7,6 +7,7 @@ from .config import (
     FALLBACK_TARGET,
 )
 
+
 def extract_currency_matches(text):
     matches = PATTERN.finditer(text)
     results = []
@@ -23,13 +24,19 @@ def extract_currency_matches(text):
             continue
 
         multiplier = 1
-        if suffix == 'k': multiplier = 1_000
-        elif suffix == 'l': multiplier = 100_000
-        elif suffix == 'm': multiplier = 1_000_000
-        elif suffix == 'cr': multiplier = 10_000_000
-        elif suffix == 'b': multiplier = 1_000_000_000
-        elif suffix == 't': multiplier = 1_000_000_000_000
-        
+        if suffix == "k":
+            multiplier = 1_000
+        elif suffix == "l":
+            multiplier = 100_000
+        elif suffix == "m":
+            multiplier = 1_000_000
+        elif suffix == "cr":
+            multiplier = 10_000_000
+        elif suffix == "b":
+            multiplier = 1_000_000_000
+        elif suffix == "t":
+            multiplier = 1_000_000_000_000
+
         amount *= multiplier
 
         currency = SYMBOL_MAP.get(currency_str, currency_str)
@@ -38,6 +45,7 @@ def extract_currency_matches(text):
 
         results.append((amount, currency))
     return results
+
 
 def format_number(num, format_pref):
     if num >= 10:
@@ -64,6 +72,7 @@ def format_number(num, format_pref):
             integer_part = f"{int(parts[0]):,}"
 
     return f"{integer_part}{decimal_part}"
+
 
 def calculate_conversions(amount, currency, rates, chat_id):
     prefs = USER_PREFERENCES.get(chat_id, {})

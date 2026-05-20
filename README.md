@@ -1,1 +1,1 @@
-test
+Convert currency using the latest exchange rates without leaving the app!

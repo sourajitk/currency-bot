@@ -2,7 +2,7 @@
 name = "currency-bot"
 version = "0.1.0"
 description = "A Telegram bot that detects currencies and converts them in real-time."
-authors = ["Your Name <you@example.com>"]
+authors = ["Sourajit Karmakar <sourajit.karmakar@gmail.com>"]
 readme = "README.md"
 packages = [{include = "currency_bot", from = "src"}]
 
