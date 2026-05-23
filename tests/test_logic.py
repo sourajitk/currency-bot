@@ -48,6 +48,11 @@ class TestCurrencyLogic(unittest.TestCase):
         self.assertEqual(extract_currency_matches("5000brl"), [(5000.0, "BRL")])
         self.assertEqual(extract_currency_matches("eur1000"), [(1000.0, "EUR")])
 
+    def test_commas(self):
+        self.assertEqual(extract_currency_matches("$10,500"), [(10500.0, "USD")])
+        self.assertEqual(extract_currency_matches("$10,000.65"), [(10000.65, "USD")])
+        self.assertEqual(extract_currency_matches("10,00,000 INR"), [(1000000.0, "INR")])
+
 
 if __name__ == "__main__":
     unittest.main()

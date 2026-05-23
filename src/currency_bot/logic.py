@@ -13,12 +13,14 @@ def extract_currency_matches(text):
     results = []
     for match in matches:
         if match.group(1) and match.group(3):
-            amount = float(match.group(1))
+            amount_str = match.group(1).replace(',', '')
+            amount = float(amount_str)
             suffix = match.group(2).lower() if match.group(2) else ""
             currency_str = match.group(3).upper()
         elif match.group(4) and match.group(5):
             currency_str = match.group(4).upper()
-            amount = float(match.group(5))
+            amount_str = match.group(5).replace(',', '')
+            amount = float(amount_str)
             suffix = match.group(6).lower() if match.group(6) else ""
         else:
             continue
