@@ -9,40 +9,60 @@ from .config import (
 
 
 def parse_amount(amount_str):
-    if '.' in amount_str and ',' in amount_str:
-        if amount_str.rfind(',') > amount_str.rfind('.'):
-            amount_str = amount_str.replace('.', '').replace(',', '.')
+    """
+    Intelligently parses an amount string into a float, taking into account both
+    US/UK and European number formats.
+    """
+    if "." in amount_str and "," in amount_str:
+        # Both separators exist: determine which is the decimal by looking at the last one
+        if amount_str.rfind(",") > amount_str.rfind("."):
+            # European format: 10.500,45 -> 10500.45
+            amount_str = amount_str.replace(".", "").replace(",", ".")
         else:
-            amount_str = amount_str.replace(',', '')
-    elif ',' in amount_str:
-        parts = amount_str.split(',')
+            # US/UK format: 10,500.45 -> 10500.45
+            amount_str = amount_str.replace(",", "")
+    elif "," in amount_str:
+        parts = amount_str.split(",")
         if len(parts[-1]) != 3:
-            amount_str = amount_str.replace(',', '.')
+            # E.g. 10,50 -> likely European decimal
+            amount_str = amount_str.replace(",", ".")
         else:
-            amount_str = amount_str.replace(',', '')
-    elif '.' in amount_str:
-        parts = amount_str.split('.')
+            # E.g. 10,500 -> likely thousands separator
+            amount_str = amount_str.replace(",", "")
+    elif "." in amount_str:
+        parts = amount_str.split(".")
         if len(parts) > 2 or len(parts[-1]) == 3:
-            amount_str = amount_str.replace('.', '')
-            
+            # E.g. 10.000.000 or 10.500 -> European thousands separator
+            amount_str = amount_str.replace(".", "")
+        # Otherwise, treat as a standard decimal (e.g. 10.50)
+
     return float(amount_str)
 
 
 def extract_currency_matches(text):
+    """
+    Extracts currency mentions from a given text using regex and returns a list of
+    (amount, currency_code) tuples.
+    """
     matches = PATTERN.finditer(text)
     results = []
+
     for match in matches:
+        # Check which side of the regex matched (amount first or currency first)
         if match.group(1) and match.group(3):
+            # Format like: 100 USD or 1.5M EUR
             amount = parse_amount(match.group(1))
             suffix = match.group(2).lower() if match.group(2) else ""
             currency_str = match.group(3).upper()
         elif match.group(4) and match.group(5):
+            # Format like: $100 or €1.5M
             currency_str = match.group(4).upper()
             amount = parse_amount(match.group(5))
             suffix = match.group(6).lower() if match.group(6) else ""
         else:
             continue
 
+        # Apply numeric suffixes (K, M, B, etc.)
         multiplier = 1
         if suffix == "k":
             multiplier = 1_000
@@ -59,11 +79,15 @@ def extract_currency_matches(text):
 
         amount *= multiplier
 
+        # Normalize symbols to standard 3-letter currency codes
         currency = SYMBOL_MAP.get(currency_str, currency_str)
+
+        # Ignore if currency is not supported by our API
         if SUPPORTED_CURRENCIES and currency not in SUPPORTED_CURRENCIES:
             continue
 
         results.append((amount, currency))
+
     return results
 
 
@@ -95,11 +119,18 @@ def format_number(num, format_pref):
 
 
 def calculate_conversions(amount, currency, rates, chat_id):
+    """
+    Calculates the conversion of the given amount into the user's preferred
+    target currencies and formats the output string for the bot to reply with.
+    """
+    # Fetch user preferences, falling back to defaults
     prefs = USER_PREFERENCES.get(chat_id, {})
     user_targets = prefs.get("targets", list(DEFAULT_TARGETS))
     format_pref = prefs.get("format", "international")
 
     targets = list(user_targets)
+
+    # If the base currency is in their targets, remove it and potentially add a fallback
     if currency in targets:
         targets.remove(currency)
         if len(targets) < len(user_targets):
@@ -111,13 +142,17 @@ def calculate_conversions(amount, currency, rates, chat_id):
                 targets.append(FALLBACK_TARGET)
 
     result_lines = []
+
+    # Calculate conversions for up to 3 targets
     for target in targets[:3]:
         if target in rates:
             converted = amount * rates[target]
             converted_str = format_number(converted, format_pref)
             result_lines.append(f"{converted_str} {target}")
 
+    # Build the final reply message
     if result_lines:
         amount_str = format_number(amount, format_pref)
         return f"<b>{amount_str} {currency}</b> equals:\n" + "\n".join(result_lines)
+
     return None
