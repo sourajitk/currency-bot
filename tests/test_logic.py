@@ -53,6 +53,12 @@ class TestCurrencyLogic(unittest.TestCase):
         self.assertEqual(extract_currency_matches("$10,000.65"), [(10000.65, "USD")])
         self.assertEqual(extract_currency_matches("10,00,000 INR"), [(1000000.0, "INR")])
 
+    def test_european_formatting(self):
+        self.assertEqual(extract_currency_matches("€10.500,45"), [(10500.45, "EUR")])
+        self.assertEqual(extract_currency_matches("10.500 EUR"), [(10500.0, "EUR")])
+        self.assertEqual(extract_currency_matches("10,50 EUR"), [(10.50, "EUR")])
+        self.assertEqual(extract_currency_matches("10.000.000 EUR"), [(10000000.0, "EUR")])
+
 
 if __name__ == "__main__":
     unittest.main()

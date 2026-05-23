@@ -8,19 +8,37 @@ from .config import (
 )
 
 
+def parse_amount(amount_str):
+    if '.' in amount_str and ',' in amount_str:
+        if amount_str.rfind(',') > amount_str.rfind('.'):
+            amount_str = amount_str.replace('.', '').replace(',', '.')
+        else:
+            amount_str = amount_str.replace(',', '')
+    elif ',' in amount_str:
+        parts = amount_str.split(',')
+        if len(parts[-1]) != 3:
+            amount_str = amount_str.replace(',', '.')
+        else:
+            amount_str = amount_str.replace(',', '')
+    elif '.' in amount_str:
+        parts = amount_str.split('.')
+        if len(parts) > 2 or len(parts[-1]) == 3:
+            amount_str = amount_str.replace('.', '')
+            
+    return float(amount_str)
+
+
 def extract_currency_matches(text):
     matches = PATTERN.finditer(text)
     results = []
     for match in matches:
         if match.group(1) and match.group(3):
-            amount_str = match.group(1).replace(',', '')
-            amount = float(amount_str)
+            amount = parse_amount(match.group(1))
             suffix = match.group(2).lower() if match.group(2) else ""
             currency_str = match.group(3).upper()
         elif match.group(4) and match.group(5):
             currency_str = match.group(4).upper()
-            amount_str = match.group(5).replace(',', '')
-            amount = float(amount_str)
+            amount = parse_amount(match.group(5))
             suffix = match.group(6).lower() if match.group(6) else ""
         else:
             continue
