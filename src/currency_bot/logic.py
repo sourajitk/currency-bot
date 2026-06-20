@@ -5,6 +5,7 @@ from .config import (
     USER_PREFERENCES,
     DEFAULT_TARGETS,
     FALLBACK_TARGET,
+    AMBIGUOUS_CURRENCIES,
 )
 
 
@@ -53,13 +54,19 @@ def extract_currency_matches(text):
             # Format like: 100 USD or 1.5M EUR
             amount = parse_amount(match.group(1))
             suffix = match.group(2).lower() if match.group(2) else ""
-            currency_str = match.group(3).upper()
+            raw_currency = match.group(3)
+            currency_str = raw_currency.upper()
         elif match.group(4) and match.group(5):
             # Format like: $100 or €1.5M
-            currency_str = match.group(4).upper()
+            raw_currency = match.group(4)
+            currency_str = raw_currency.upper()
             amount = parse_amount(match.group(5))
             suffix = match.group(6).lower() if match.group(6) else ""
         else:
+            continue
+
+        # Skip ambiguous 3-letter words if they are not fully uppercase (e.g. "try 15")
+        if currency_str in AMBIGUOUS_CURRENCIES and not raw_currency.isupper():
             continue
 
         # Apply numeric suffixes (K, M, B, etc.)

@@ -38,7 +38,7 @@ class TestCurrencyLogic(unittest.TestCase):
     def test_whole_word_matching(self):
         self.assertEqual(extract_currency_matches("Call190Now"), [])
         self.assertEqual(extract_currency_matches("Actually 190"), [])
-        self.assertEqual(extract_currency_matches("All190"), [(190.0, "ALL")])
+        self.assertEqual(extract_currency_matches("All190"), [])
         self.assertEqual(extract_currency_matches("190 EUR"), [(190.0, "EUR")])
         self.assertEqual(extract_currency_matches("EUR 190"), [(190.0, "EUR")])
         self.assertEqual(extract_currency_matches("190EUR"), [(190.0, "EUR")])
@@ -47,6 +47,24 @@ class TestCurrencyLogic(unittest.TestCase):
     def test_num_attached_with_text(self):
         self.assertEqual(extract_currency_matches("5000brl"), [(5000.0, "BRL")])
         self.assertEqual(extract_currency_matches("eur1000"), [(1000.0, "EUR")])
+
+    def test_ambiguous_currencies(self):
+        # Uppercase ambiguous currencies should match
+        self.assertEqual(extract_currency_matches("TRY 15"), [(15.0, "TRY")])
+        self.assertEqual(extract_currency_matches("15 TRY"), [(15.0, "TRY")])
+        self.assertEqual(extract_currency_matches("ALL 190"), [(190.0, "ALL")])
+        self.assertEqual(extract_currency_matches("190 ALL"), [(190.0, "ALL")])
+        
+        # Lowercase or mixed case ambiguous currencies should not match
+        self.assertEqual(extract_currency_matches("try 15 times"), [])
+        self.assertEqual(extract_currency_matches("Try 15 times"), [])
+        self.assertEqual(extract_currency_matches("all 100 people"), [])
+        
+        # Non-ambiguous currencies should still match regardless of case
+        self.assertEqual(extract_currency_matches("usd 15"), [(15.0, "USD")])
+        self.assertEqual(extract_currency_matches("15 usd"), [(15.0, "USD")])
+        self.assertEqual(extract_currency_matches("15 Usd"), [(15.0, "USD")])
+        self.assertEqual(extract_currency_matches("all $100 were taken"), [(100.0, "USD")])
 
     def test_commas(self):
         self.assertEqual(extract_currency_matches("$10,500"), [(10500.0, "USD")])

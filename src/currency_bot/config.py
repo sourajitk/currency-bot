@@ -29,6 +29,12 @@ PATTERN = re.compile(
     r"(?:(?<!\w)([A-Za-z]{3}|[\$€£₹¥₽₩₪])\s*(\d(?:[\d.,]*\d)?)\s*(k|m|b|t|l|cr)?(?!\w))"
 )
 
+# Common 3-letter English words that are also currency codes.
+# These will be ignored if matched in lowercase or mixed case to avoid false positives.
+AMBIGUOUS_CURRENCIES = {
+    "TRY", "ALL", "PEN", "BOB", "COP", "CUP", "GEL", "KID", "MAD", "MOP", "RUB", "SOS", "TOP"
+}
+
 
 def load_preferences():
     if os.path.exists(PREFS_FILE):
