@@ -18,15 +18,22 @@ SYMBOL_MAP = {
     "₽": "RUB",
     "₩": "KRW",
     "₪": "ILS",
+    "₺": "TRY",
+    "₱": "PHP",
+    "đ": "VND",
+    "Đ": "VND",
 }
+
+# Currencies that use European-style formatting (comma as decimal separator, period as thousands separator)
+EUROPEAN_STYLE_CURRENCIES = {"EUR", "BRL", "TRY", "VND", "IDR", "ALL"}
 
 # Main regex pattern used to detect currency mentions. It matches two primary forms:
 # 1. Amount first: e.g., "100.50 k USD"
 # 2. Symbol first: e.g., "$ 100.50 k"
 # It looks for word boundaries `(?<!\w)` and `(?!\w)` to avoid matching partial words.
 PATTERN = re.compile(
-    r"(?i)(?:(?<!\w)(\d(?:[\d.,]*\d)?)\s*(k|m|b|t|l|cr)?\s*([A-Za-z]{3}|[\$€£₹¥₽₩₪])(?!\w))|"
-    r"(?:(?<!\w)([A-Za-z]{3}|[\$€£₹¥₽₩₪])\s*(\d(?:[\d.,]*\d)?)\s*(k|m|b|t|l|cr)?(?!\w))"
+    r"(?i)(?:(?<!\w)(\d(?:[\d.,]*\d)?)\s*(k|m|b|t|l|cr)?\s*([A-Za-z]{3}|[\$€£₹¥₽₩₪₺₱đ])(?!\w))|"
+    r"(?:(?<!\w)([A-Za-z]{3}|[\$€£₹¥₽₩₪₺₱đ])\s*(\d(?:[\d.,]*\d)?)\s*(k|m|b|t|l|cr)?(?!\w))"
 )
 
 # Common 3-letter English words that are also currency codes.

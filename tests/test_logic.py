@@ -84,9 +84,23 @@ class TestCurrencyLogic(unittest.TestCase):
     def test_decimals_inputs(self):
         self.assertEqual(extract_currency_matches("$10.50"), [(10.50, "USD")])
         self.assertEqual(extract_currency_matches("$10,50"), [(10.50, "USD")])
-        self.assertEqual(extract_currency_matches("$10.500"), [(10500.0, "USD")])
+        self.assertEqual(extract_currency_matches("$10.500"), [(10.5, "USD")])
         self.assertEqual(extract_currency_matches("$0.050"), [(0.050, "USD")])
         self.assertEqual(extract_currency_matches("$0.00020"), [(0.00020, "USD")])
+        self.assertEqual(extract_currency_matches("$2.3487"), [(2.3487, "USD")])
+        self.assertEqual(extract_currency_matches("$2.348"), [(2.348, "USD")])
+
+    def test_malformed_numbers(self):
+        # Malformed float representations should be skipped instead of raising ValueError
+        self.assertEqual(extract_currency_matches("1.2,3.4 USD"), [])
+        self.assertEqual(extract_currency_matches("1,,2 USD"), [])
+
+    def test_new_currency_symbols(self):
+        # Test Turkish Lira (₺), Philippine Peso (₱), Vietnamese Dong (đ)
+        self.assertEqual(extract_currency_matches("₺15"), [(15.0, "TRY")])
+        self.assertEqual(extract_currency_matches("15 ₺"), [(15.0, "TRY")])
+        self.assertEqual(extract_currency_matches("₱100"), [(100.0, "PHP")])
+        self.assertEqual(extract_currency_matches("100 đ"), [(100.0, "VND")])
 
 
 if __name__ == "__main__":

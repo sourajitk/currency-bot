@@ -6,10 +6,11 @@ from .config import (
     DEFAULT_TARGETS,
     FALLBACK_TARGET,
     AMBIGUOUS_CURRENCIES,
+    EUROPEAN_STYLE_CURRENCIES,
 )
 
 
-def parse_amount(amount_str):
+def parse_amount(amount_str, currency=None):
     """
     Intelligently parses an amount string into a float, taking into account both
     US/UK and European number formats.
@@ -25,19 +26,33 @@ def parse_amount(amount_str):
     elif "," in amount_str:
         parts = amount_str.split(",")
         is_zero_or_empty = not parts[0] or all(c == "0" for c in parts[0])
-        if len(parts[-1]) != 3 or is_zero_or_empty:
-            # E.g. 10,50 or 0,050 -> likely European decimal
-            amount_str = amount_str.replace(",", ".")
+        # If the currency is known to use US/UK formatting, treat single comma as thousands separator unless it's a decimal
+        if currency and currency not in EUROPEAN_STYLE_CURRENCIES:
+            if len(parts[-1]) != 3 or is_zero_or_empty:
+                amount_str = amount_str.replace(",", ".")
+            else:
+                amount_str = amount_str.replace(",", "")
         else:
-            # E.g. 10,500 -> likely thousands separator
-            amount_str = amount_str.replace(",", "")
+            if len(parts[-1]) != 3 or is_zero_or_empty:
+                # E.g. 10,50 or 0,050 -> likely European decimal
+                amount_str = amount_str.replace(",", ".")
+            else:
+                # E.g. 10,500 -> likely thousands separator
+                amount_str = amount_str.replace(",", "")
     elif "." in amount_str:
         parts = amount_str.split(".")
         is_zero_or_empty = not parts[0] or all(c == "0" for c in parts[0])
-        if not is_zero_or_empty and (len(parts) > 2 or len(parts[-1]) == 3):
-            # E.g. 10.000.000 or 10.500 -> European thousands separator
-            amount_str = amount_str.replace(".", "")
-        # Otherwise, treat as a standard decimal (e.g. 10.50 or 0.050)
+        # If the currency is known to use US/UK formatting, single dot is always a decimal separator
+        if currency and currency not in EUROPEAN_STYLE_CURRENCIES:
+            pass  # Do not strip the period
+        elif currency in EUROPEAN_STYLE_CURRENCIES:
+            if not is_zero_or_empty and (len(parts) > 2 or len(parts[-1]) == 3):
+                # E.g. 10.000.000 or 10.500 -> European thousands separator
+                amount_str = amount_str.replace(".", "")
+        else:
+            # Fallback when currency is not known/specified
+            if not is_zero_or_empty and (len(parts) > 2 or len(parts[-1]) == 3):
+                amount_str = amount_str.replace(".", "")
 
     return float(amount_str)
 
@@ -51,20 +66,25 @@ def extract_currency_matches(text):
     results = []
 
     for match in matches:
-        # Check which side of the regex matched (amount first or currency first)
-        if match.group(1) and match.group(3):
-            # Format like: 100 USD or 1.5M EUR
-            amount = parse_amount(match.group(1))
-            suffix = match.group(2).lower() if match.group(2) else ""
-            raw_currency = match.group(3)
-            currency_str = raw_currency.upper()
-        elif match.group(4) and match.group(5):
-            # Format like: $100 or €1.5M
-            raw_currency = match.group(4)
-            currency_str = raw_currency.upper()
-            amount = parse_amount(match.group(5))
-            suffix = match.group(6).lower() if match.group(6) else ""
-        else:
+        try:
+            # Check which side of the regex matched (amount first or currency first)
+            if match.group(1) and match.group(3):
+                # Format like: 100 USD or 1.5M EUR
+                raw_currency = match.group(3)
+                currency_str = raw_currency.upper()
+                currency = SYMBOL_MAP.get(currency_str, currency_str)
+                amount = parse_amount(match.group(1), currency)
+                suffix = match.group(2).lower() if match.group(2) else ""
+            elif match.group(4) and match.group(5):
+                # Format like: $100 or €1.5M
+                raw_currency = match.group(4)
+                currency_str = raw_currency.upper()
+                currency = SYMBOL_MAP.get(currency_str, currency_str)
+                amount = parse_amount(match.group(5), currency)
+                suffix = match.group(6).lower() if match.group(6) else ""
+            else:
+                continue
+        except ValueError:
             continue
 
         # Skip ambiguous 3-letter words if they are not fully uppercase (e.g. "try 15")
@@ -89,7 +109,7 @@ def extract_currency_matches(text):
         amount *= multiplier
 
         # Normalize symbols to standard 3-letter currency codes
-        currency = SYMBOL_MAP.get(currency_str, currency_str)
+        # Already normalized above
 
         # Ignore if currency is not supported by our API
         if SUPPORTED_CURRENCIES and currency not in SUPPORTED_CURRENCIES:
