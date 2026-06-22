@@ -24,18 +24,20 @@ def parse_amount(amount_str):
             amount_str = amount_str.replace(",", "")
     elif "," in amount_str:
         parts = amount_str.split(",")
-        if len(parts[-1]) != 3:
-            # E.g. 10,50 -> likely European decimal
+        is_zero_or_empty = not parts[0] or all(c == "0" for c in parts[0])
+        if len(parts[-1]) != 3 or is_zero_or_empty:
+            # E.g. 10,50 or 0,050 -> likely European decimal
             amount_str = amount_str.replace(",", ".")
         else:
             # E.g. 10,500 -> likely thousands separator
             amount_str = amount_str.replace(",", "")
     elif "." in amount_str:
         parts = amount_str.split(".")
-        if len(parts) > 2 or len(parts[-1]) == 3:
+        is_zero_or_empty = not parts[0] or all(c == "0" for c in parts[0])
+        if not is_zero_or_empty and (len(parts) > 2 or len(parts[-1]) == 3):
             # E.g. 10.000.000 or 10.500 -> European thousands separator
             amount_str = amount_str.replace(".", "")
-        # Otherwise, treat as a standard decimal (e.g. 10.50)
+        # Otherwise, treat as a standard decimal (e.g. 10.50 or 0.050)
 
     return float(amount_str)
 

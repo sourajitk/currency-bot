@@ -81,6 +81,13 @@ class TestCurrencyLogic(unittest.TestCase):
             extract_currency_matches("10.000.000 EUR"), [(10000000.0, "EUR")]
         )
 
+    def test_decimals_inputs(self):
+        self.assertEqual(extract_currency_matches("$10.50"), [(10.50, "USD")])
+        self.assertEqual(extract_currency_matches("$10,50"), [(10.50, "USD")])
+        self.assertEqual(extract_currency_matches("$10.500"), [(10500.0, "USD")])
+        self.assertEqual(extract_currency_matches("$0.050"), [(0.050, "USD")])
+        self.assertEqual(extract_currency_matches("$0.00020"), [(0.00020, "USD")])
+
 
 if __name__ == "__main__":
     unittest.main()
