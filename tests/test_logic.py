@@ -102,6 +102,61 @@ class TestCurrencyLogic(unittest.TestCase):
         self.assertEqual(extract_currency_matches("₱100"), [(100.0, "PHP")])
         self.assertEqual(extract_currency_matches("100 đ"), [(100.0, "VND")])
 
+    def test_full_word_multipliers(self):
+        self.assertEqual(extract_currency_matches("$1.65 trillion"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("$1.65trillion"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("1.65 trillion USD"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("1.65 trillion dollars"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("1.65 trillion $"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("USD 1.65 trillion"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("$1.65tn"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("2.5 billion EUR"), [(2_500_000_000.0, "EUR")])
+        self.assertEqual(extract_currency_matches("€2.5 bil"), [(2_500_000_000.0, "EUR")])
+        self.assertEqual(extract_currency_matches("10 million GBP"), [(10_000_000.0, "GBP")])
+        self.assertEqual(extract_currency_matches("5 thousand bucks"), [(5_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("₹5 lakh"), [(500_000.0, "INR")])
+        self.assertEqual(extract_currency_matches("5 lakhs rupees"), [(500_000.0, "INR")])
+        self.assertEqual(extract_currency_matches("10 crore INR"), [(100_000_000.0, "INR")])
+        self.assertEqual(extract_currency_matches("1 quadrillion JPY"), [(1_000_000_000_000_000.0, "JPY")])
+
+    def test_sentence_context(self):
+        self.assertEqual(
+            extract_currency_matches("The market cap reached $1.65 trillion yesterday."),
+            [(1_650_000_000_000.0, "USD")],
+        )
+        self.assertEqual(
+            extract_currency_matches("He spent 500 bucks on a new phone."),
+            [(500.0, "USD")],
+        )
+        self.assertEqual(
+            extract_currency_matches("Can you send me rs. 500 for dinner?"),
+            [(500.0, "INR")],
+        )
+        self.assertEqual(
+            extract_currency_matches("They raised 2.5 billion EUR in funding."),
+            [(2_500_000_000.0, "EUR")],
+        )
+        self.assertEqual(
+            extract_currency_matches("I owe him 5 lakhs rupees."),
+            [(500_000.0, "INR")],
+        )
+        self.assertEqual(
+            extract_currency_matches("We exchanged 100 EUR for USD 120."),
+            [(100.0, "EUR"), (120.0, "USD")],
+        )
+
+    def test_additional_combos(self):
+        self.assertEqual(extract_currency_matches("$ 1.65 trillion"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("1.65t$"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("1.65 t $"), [(1_650_000_000_000.0, "USD")])
+        self.assertEqual(extract_currency_matches("rupees 5 lakh"), [(500_000.0, "INR")])
+        self.assertEqual(extract_currency_matches("5000 €"), [(5000.0, "EUR")])
+        self.assertEqual(extract_currency_matches("5000€"), [(5000.0, "EUR")])
+        self.assertEqual(extract_currency_matches("100 francs"), [(100.0, "CHF")])
+        self.assertEqual(extract_currency_matches("100 yuan"), [(100.0, "CNY")])
+        self.assertEqual(extract_currency_matches("100 rmb"), [(100.0, "CNY")])
+        self.assertEqual(extract_currency_matches("100 reais"), [(100.0, "BRL")])
+
 
 if __name__ == "__main__":
     unittest.main()

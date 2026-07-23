@@ -1,7 +1,9 @@
 from .config import (
     PATTERN,
     SYMBOL_MAP,
+    MULTIPLIER_MAP,
     SUPPORTED_CURRENCIES,
+    KNOWN_CURRENCIES,
     USER_PREFERENCES,
     DEFAULT_TARGETS,
     FALLBACK_TARGET,
@@ -69,47 +71,53 @@ def extract_currency_matches(text):
         try:
             # Check which side of the regex matched (amount first or currency first)
             if match.group(1) and match.group(3):
-                # Format like: 100 USD or 1.5M EUR
+                # Format like: 100 USD, 1.5M EUR, 1.65 trillion dollars
                 raw_currency = match.group(3)
-                currency_str = raw_currency.upper()
-                currency = SYMBOL_MAP.get(currency_str, currency_str)
-                amount = parse_amount(match.group(1), currency)
+                amount_str = match.group(1)
                 suffix = match.group(2).lower() if match.group(2) else ""
             elif match.group(4) and match.group(5):
-                # Format like: $100 or €1.5M
+                # Format like: $100, €1.5M, $1.65 trillion, rs. 500
                 raw_currency = match.group(4)
-                currency_str = raw_currency.upper()
-                currency = SYMBOL_MAP.get(currency_str, currency_str)
-                amount = parse_amount(match.group(5), currency)
+                amount_str = match.group(5)
                 suffix = match.group(6).lower() if match.group(6) else ""
             else:
                 continue
+
+            raw_curr_lower = raw_currency.lower()
+            if raw_curr_lower in SYMBOL_MAP:
+                currency = SYMBOL_MAP[raw_curr_lower]
+                currency_str = currency
+            elif raw_currency in SYMBOL_MAP:
+                currency = SYMBOL_MAP[raw_currency]
+                currency_str = currency
+            else:
+                currency_str = raw_currency.upper()
+                currency = currency_str
+
+            amount = parse_amount(amount_str, currency)
         except ValueError:
             continue
 
-        # Skip ambiguous 3-letter words if they are not fully uppercase (e.g. "try 15")
-        if currency_str in AMBIGUOUS_CURRENCIES and not raw_currency.isupper():
+        # Skip ambiguous 3-letter words if they are not matched via SYMBOL_MAP and are not uppercase
+        if (
+            currency_str in AMBIGUOUS_CURRENCIES
+            and raw_curr_lower not in SYMBOL_MAP
+            and not raw_currency.isupper()
+        ):
             continue
 
-        # Apply numeric suffixes (K, M, B, etc.)
-        multiplier = 1
-        if suffix == "k":
-            multiplier = 1_000
-        elif suffix == "l":
-            multiplier = 100_000
-        elif suffix == "m":
-            multiplier = 1_000_000
-        elif suffix == "cr":
-            multiplier = 10_000_000
-        elif suffix == "b":
-            multiplier = 1_000_000_000
-        elif suffix == "t":
-            multiplier = 1_000_000_000_000
+        # Skip invalid 3-letter non-currency words (e.g. "him", "for", "the")
+        valid_currencies = SUPPORTED_CURRENCIES or KNOWN_CURRENCIES
+        if (
+            raw_curr_lower not in SYMBOL_MAP
+            and currency_str not in valid_currencies
+            and not raw_currency.isupper()
+        ):
+            continue
 
+        # Apply numeric multipliers (K, M, B, T, Trillion, Lakh, Crore, etc.)
+        multiplier = MULTIPLIER_MAP.get(suffix, 1)
         amount *= multiplier
-
-        # Normalize symbols to standard 3-letter currency codes
-        # Already normalized above
 
         # Ignore if currency is not supported by our API
         if SUPPORTED_CURRENCIES and currency not in SUPPORTED_CURRENCIES:
